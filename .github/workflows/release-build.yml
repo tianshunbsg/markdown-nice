@@ -1,49 +1,29 @@
-name: Build and Deploy
+- name: 打包构建产物
+  run: |
+    OUTPUT_DIR="build" # 根据 package.json，优先尝试 'build'
 
-on:
-  release:
-    types: [published]  # 只有发布新版本时触发
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: 检出代码
-      uses: actions/checkout@v2
-
-    - name: 设置 Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16'
-
-    - name: 安装依赖
-      run: npm install --legacy-peer-deps
-
-    - name: 构建项目
-      run: npm run build
-
-    - name: 查看目录结构
-      run: |
-        echo "工作目录内容如下："
-        ls -al
-        echo "查找所有文件夹："
-        find . -type d
-
-    - name: 打包构建产物
-      run: |
-        # 检查生成的文件夹路径
-        if [ -d "build" ]; then
-          zip -r markdown-nice-dist.zip build
-        elif [ -d "lib" ]; then
-          zip -r markdown-nice-dist.zip lib
-        else
-          echo "没有找到build或lib文件夹，构建失败！"
-          exit 1
-        fi
-
-    - name: 上传打包文件
-      uses: actions/upload-artifact@v3
-      with:
-        name: markdown-nice-dist
-        path: markdown-nice-dist.zip
+    if [ -d "$OUTPUT_DIR" ]; then
+      echo "找到构建产物目录: $OUTPUT_DIR"
+      echo "目录 '$OUTPUT_DIR' 内容:"
+      ls -al $OUTPUT_DIR # 显示 'build' 目录内容
+      zip -r markdown-nice-dist.zip $OUTPUT_DIR
+      echo "已将 '$OUTPUT_DIR' 打包到 markdown-nice-dist.zip"
+    else
+      # 如果 build 目录不存在，打印更详细的调试信息
+      echo "错误：没有找到预期的构建产物目录 '$OUTPUT_DIR'!"
+      echo "尝试查找其他常见目录如 'dist', 'lib'..."
+      if [ -d "dist" ]; then
+         echo "发现 'dist' 目录，但预期是 'build'。可能构建配置有误？"
+         zip -r markdown-nice-dist.zip dist
+      elif [ -d "lib" ]; then
+         echo "发现 'lib' 目录，但预期是 'build'。这可能是库文件，不是应用构建。可能构建配置有误？"
+         zip -r markdown-nice-dist.zip lib
+      else
+         echo "也未能找到 'dist' 或 'lib' 目录。"
+         echo "当前工作目录结构："
+         ls -al
+         echo "所有一级子目录："
+         find . -maxdepth 1 -type d
+         exit 1
+      fi
+    fi
