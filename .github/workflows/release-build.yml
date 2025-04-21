@@ -17,19 +17,21 @@ jobs:
       with:
         node-version: '16'
 
-    - name: Install dependencies (with legacy-peer-deps)
+    - name: Install dependencies
       run: npm install --legacy-peer-deps
 
     - name: Build project
       run: npm run build
 
-    - name: Zip build output
-      run: |
-        zip -r markdown-nice-dist.zip dist
+    - name: Show output files
+      run: ls -al
 
-    - name: Upload zip to GitHub Release
+    - name: Zip build folder
+      run: zip -r markdown-nice-dist.zip build
+
+    - name: Upload build to release
       uses: softprops/action-gh-release@v1
       with:
         files: markdown-nice-dist.zip
       env:
-        GITHUB_TOKEN: ${{ secrets.TOKEN1 }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
