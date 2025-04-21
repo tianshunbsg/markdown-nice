@@ -1,37 +1,49 @@
-name: Build and Upload on Release
+name: Build and Deploy
 
 on:
   release:
-    types: [published]
+    types: [published]  # 只有发布新版本时触发
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout source code
-      uses: actions/checkout@v3
+    - name: 检出代码
+      uses: actions/checkout@v2
 
-    - name: Set up Node.js
+    - name: 设置 Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '16'
 
-    - name: Install dependencies
+    - name: 安装依赖
       run: npm install --legacy-peer-deps
 
-    - name: Build project
+    - name: 构建项目
       run: npm run build
 
-    - name: Show output files
-      run: ls -al
+    - name: 查看目录结构
+      run: |
+        echo "工作目录内容如下："
+        ls -al
+        echo "查找所有文件夹："
+        find . -type d
 
-    - name: Zip build folder
-      run: zip -r markdown-nice-dist.zip build
+    - name: 打包构建产物
+      run: |
+        # 检查生成的文件夹路径
+        if [ -d "build" ]; then
+          zip -r markdown-nice-dist.zip build
+        elif [ -d "lib" ]; then
+          zip -r markdown-nice-dist.zip lib
+        else
+          echo "没有找到build或lib文件夹，构建失败！"
+          exit 1
+        fi
 
-    - name: Upload build to release
-      uses: softprops/action-gh-release@v1
+    - name: 上传打包文件
+      uses: actions/upload-artifact@v3
       with:
-        files: markdown-nice-dist.zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.TOKEN1 }}
+        name: markdown-nice-dist
+        path: markdown-nice-dist.zip
