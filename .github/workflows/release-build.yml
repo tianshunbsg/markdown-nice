@@ -1,0 +1,36 @@
+name: Build and Upload on Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build project
+      run: npm run build
+
+    - name: Zip build output
+      run: |
+        cd dist
+        zip -r ../markdown-nice-dist.zip .
+
+    - name: Upload zip to release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: markdown-nice-dist.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
