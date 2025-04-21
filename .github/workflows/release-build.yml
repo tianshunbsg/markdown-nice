@@ -9,27 +9,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout source
+    - name: Checkout source code
       uses: actions/checkout@v3
 
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '16'
-        
-    - name: Install dependencies (clean install)
-      run: npm ci --legacy-peer-deps
 
+    - name: Install dependencies (with legacy-peer-deps)
+      run: npm install --legacy-peer-deps
 
     - name: Build project
       run: npm run build
 
     - name: Zip build output
       run: |
-        cd dist
-        zip -r ../markdown-nice-dist.zip .
+        zip -r markdown-nice-dist.zip dist
 
-    - name: Upload zip to release
+    - name: Upload zip to GitHub Release
       uses: softprops/action-gh-release@v1
       with:
         files: markdown-nice-dist.zip
